@@ -14,7 +14,9 @@ import com.example.raintodo.repository.TodoItem
 class TodoItemAdapter(
     private var items: List<TodoItem> = emptyList(),
     private val onContentChanged: (Int, String) -> Unit = { _, _ -> },
-    private val onCheckChanged: (Int, Boolean) -> Unit = { _, _ -> }
+    private val onCheckChanged: (Int, Boolean) -> Unit = { _, _ -> },
+    private val onAddNewItem: () -> Unit = {},
+    private val onDeleteItem: (Int) -> Unit = {}
 ) : RecyclerView.Adapter<TodoItemAdapter.TodoItemViewHolder>() {
 
     fun submitList(newItems: List<TodoItem>) {
@@ -29,42 +31,69 @@ class TodoItemAdapter(
     }
 
     override fun onBindViewHolder(holder: TodoItemViewHolder, position: Int) {
-        holder.bind(items[position], position)
+        if (position == items.size) {
+            holder.bindAddButton()
+        } else {
+            holder.bind(items[position])
+        }
     }
 
-    override fun getItemCount() = items.size
+    override fun getItemCount() = items.size + 1
 
     inner class TodoItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val ivSubCheck: ImageView by lazy { itemView.findViewById(R.id.iv_item) }
-        private val etSubContent: EditText by lazy { itemView.findViewById(R.id.et_item) }
+        private val ivSubCheck: ImageView = itemView.findViewById(R.id.iv_item)
+        private val etSubContent: EditText = itemView.findViewById(R.id.et_item)
 
-        // 自定义 TextWatcher，方便移除
         private var currentTextWatcher: TextWatcher? = null
+        private var lastContent: String = ""
+        private var currentItemId: Int = -1
 
-        fun bind(item: TodoItem, position: Int) {
-            // 设置勾选状态
+        fun bind(item: TodoItem) {
+            currentItemId = item.id
+            lastContent = item.content
+
+            ivSubCheck.visibility = View.VISIBLE
             ivSubCheck.setImageResource(
                 if (item.isCompleted) R.drawable.ic_main_check
                 else R.drawable.ic_main_uncheck
             )
 
-            // 设置内容（先移除旧的监听器，再设置文本，再添加新的监听器）
             removeTextWatcher()
-            etSubContent.setText(item.content)
-            addTextWatcher(position)
 
-            // 勾选点击
+            if (etSubContent.text.toString() != item.content) {
+                etSubContent.setText(item.content)
+            }
+
+            addTextWatcher()
+
             ivSubCheck.setOnClickListener {
-                onCheckChanged(position, !item.isCompleted)
+                onCheckChanged(currentItemId, !item.isCompleted)
             }
         }
 
-        private fun addTextWatcher(position: Int) {
+        fun bindAddButton() {
+            currentItemId = -1
+            ivSubCheck.visibility = View.GONE
+            etSubContent.hint = "+ 添加子任务"
+            etSubContent.setText("")
+
+            etSubContent.setOnClickListener { onAddNewItem() }
+        }
+
+        private fun addTextWatcher() {
             val watcher = object : TextWatcher {
                 override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
                 override fun afterTextChanged(s: Editable?) {
-                    onContentChanged(position, s.toString())
+                    val newContent = s.toString()
+                    if (newContent.isEmpty() && lastContent.isNotEmpty() && currentItemId != -1) {
+                        onDeleteItem(currentItemId)
+                        return
+                    }
+                    if (newContent != lastContent && currentItemId != -1) {
+                        lastContent = newContent
+                        onContentChanged(currentItemId, newContent)
+                    }
                 }
             }
             etSubContent.addTextChangedListener(watcher)
@@ -72,9 +101,7 @@ class TodoItemAdapter(
         }
 
         private fun removeTextWatcher() {
-            currentTextWatcher?.let {
-                etSubContent.removeTextChangedListener(it)
-            }
+            currentTextWatcher?.let { etSubContent.removeTextChangedListener(it) }
             currentTextWatcher = null
         }
     }

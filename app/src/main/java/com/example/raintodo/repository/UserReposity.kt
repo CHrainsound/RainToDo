@@ -15,12 +15,10 @@ class UserRepository(context: Context) {
         private const val KEY_TOKEN = "auth_token"
     }
 
-    /**
-     * 注册新用户
-     */
+    //注册新用户
     fun register(username: String, password: String): Resource<Boolean> {
         return try {
-            // 1. 输入校验
+            //校验
             if (username.length < 3) {
                 return Resource.error("用户名至少3个字符", false)
             }
@@ -28,12 +26,12 @@ class UserRepository(context: Context) {
                 return Resource.error("密码至少6个字符", false)
             }
 
-            // 2. 检查用户名是否已存在
+            //检查用户名
             if (dbHelper.isUsernameExists(username)) {
                 return Resource.error("用户名已存在", false)
             }
 
-            // 3. 注册用户
+            //注册用户
             val success = dbHelper.registerUser(username, password)
             if (success) {
                 Resource.success(true)
@@ -45,12 +43,10 @@ class UserRepository(context: Context) {
         }
     }
 
-    /**
-     * 用户登录
-     */
+    //用户登录
     fun login(username: String, password: String): Resource<Boolean> {
         return try {
-            // 1. 输入校验
+            //校验
             if (username.isEmpty()) {
                 return Resource.error("请输入用户名", false)
             }
@@ -58,10 +54,10 @@ class UserRepository(context: Context) {
                 return Resource.error("请输入密码", false)
             }
 
-            // 2. 验证登录
+            // 验证登录
             val success = dbHelper.loginUser(username, password)
             if (success) {
-                // 3. 保存登录状态
+                //保存登录状态
                 saveLoginState(username)
                 Resource.success(true)
             } else {
@@ -72,42 +68,25 @@ class UserRepository(context: Context) {
         }
     }
 
-    /**
-     * 保存登录状态到 SharedPreferences
-     */
+    //保存登录状态
     private fun saveLoginState(username: String) {
         val editor = sharedPreferences.edit()
         editor.putBoolean(KEY_IS_LOGGED_IN, true)
         editor.putString(KEY_USERNAME, username)
-        editor.putString(KEY_TOKEN, generateToken(username))
         editor.apply()
     }
 
-    /**
-     * 生成简单的 Token（生产环境建议用 JWT）
-     */
-    private fun generateToken(username: String): String {
-        val timestamp = System.currentTimeMillis()
-        return "$username:$timestamp".hashCode().toString(16)
-    }
-
-    /**
-     * 检查是否已登录
-     */
+    //检查是否已登录
     fun isLoggedIn(): Boolean {
         return sharedPreferences.getBoolean(KEY_IS_LOGGED_IN, false)
     }
 
-    /**
-     * 获取当前登录用户名
-     */
+    //获取当前登录用户名
     fun getCurrentUsername(): String? {
         return sharedPreferences.getString(KEY_USERNAME, null)
     }
 
-    /**
-     * 退出登录
-     */
+    //退出登录
     fun logout() {
         val editor = sharedPreferences.edit()
         editor.clear()

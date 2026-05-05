@@ -26,7 +26,7 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(
         private const val COL_SALT = "salt"
         private const val COL_CREATED_AT = "created_at"
 
-        // 待办清单主表
+        // 主表
         private const val TABLE_TODOS = "todos"
         private const val COL_TODO_ID = "id"
         private const val COL_USER_ID = "user_id"
@@ -35,7 +35,7 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(
         private const val COL_TODO_CREATED_AT = "created_at"
         private const val COL_UPDATED_AT = "updated_at"
 
-        // 待办事项明细表
+        // 明细
         private const val TABLE_TODO_ITEMS = "todo_items"
         private const val COL_ITEM_ID = "id"
         private const val COL_TODO_ID_FK = "todo_id"
@@ -45,7 +45,7 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(
     }
 
     override fun onCreate(db: SQLiteDatabase) {
-        // 创建用户表
+        // 用户表
         val createUsersTable = """
             CREATE TABLE $TABLE_USERS (
                 $COL_ID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -57,7 +57,7 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(
         """.trimIndent()
         db.execSQL(createUsersTable)
 
-        // 创建待办清单主表（包含 is_completed 字段）
+        // 主表
         val createTodosTable = """
             CREATE TABLE $TABLE_TODOS (
                 $COL_TODO_ID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -70,8 +70,7 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(
             )
         """.trimIndent()
         db.execSQL(createTodosTable)
-
-        // 创建待办事项明细表
+        //明细
         val createTodoItemsTable = """
             CREATE TABLE $TABLE_TODO_ITEMS (
                 $COL_ITEM_ID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -111,12 +110,9 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(
             """.trimIndent())
         }
         if (oldVersion < 4) {
-            // 添加清单完成状态字段
             db.execSQL("ALTER TABLE $TABLE_TODOS ADD COLUMN $COL_TODO_IS_COMPLETED INTEGER DEFAULT 0")
         }
     }
-
-    // ========== 密码加密相关（保持不变） ==========
 
     private fun generateSalt(): String {
         val random = SecureRandom()
@@ -141,8 +137,6 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(
         }
         return String(hexChars)
     }
-
-    // ========== 用户操作（保持不变） ==========
 
     fun registerUser(username: String, password: String): Boolean {
         val db = writableDatabase
@@ -220,11 +214,7 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(
         return userId
     }
 
-    // ========== 待办清单操作 ==========
-
-    /**
-     * 获取指定用户的所有待办清单（包含每条清单下的明细事项）
-     */
+    //获取特定用户的待办
     fun getTodosByUserId(userId: Int): List<TodoList> {
         val db = readableDatabase
         val todoLists = mutableListOf<TodoList>()
@@ -265,9 +255,7 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(
         return todoLists
     }
 
-    /**
-     * 获取指定清单下的所有明细事项
-     */
+    //获取清单下的所有明细事项
     private fun getTodoItemsByTodoId(todoId: Int): List<TodoItem> {
         val db = readableDatabase
         val items = mutableListOf<TodoItem>()
@@ -298,9 +286,7 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(
         return items
     }
 
-    /**
-     * 添加待办清单
-     */
+    //添加待办清单
     fun addTodo(userId: Int, title: String): Long {
         val db = writableDatabase
         val values = ContentValues().apply {
@@ -311,9 +297,7 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(
         return db.insert(TABLE_TODOS, null, values)
     }
 
-    /**
-     * 更新待办清单标题
-     */
+    //更新清单标题
     fun updateTodoTitle(id: Int, title: String): Int {
         val db = writableDatabase
         val values = ContentValues().apply {
@@ -323,19 +307,14 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(
         return db.update(TABLE_TODOS, values, "$COL_TODO_ID = ?", arrayOf(id.toString()))
     }
 
-    /**
-     * 删除待办清单（同时删除其下的所有明细事项）
-     */
+    //删除待办清单（同时删除所有明细）
     fun deleteTodo(id: Int): Int {
         val db = writableDatabase
         db.delete(TABLE_TODO_ITEMS, "$COL_TODO_ID_FK = ?", arrayOf(id.toString()))
         return db.delete(TABLE_TODOS, "$COL_TODO_ID = ?", arrayOf(id.toString()))
     }
 
-    /**
-     * 向指定清单添加一条明细事项
-     * 添加后自动检查清单是否应该变为未完成
-     */
+    //向清单添加一条明细
     fun addTodoItem(todoId: Int, content: String): Long {
         val db = writableDatabase
         val values = ContentValues().apply {
@@ -352,9 +331,7 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(
         return result
     }
 
-    /**
-     * 更新明细事项内容
-     */
+    //更新明细事项内容
     fun updateTodoItem(id: Int, content: String): Int {
         val db = writableDatabase
         val values = ContentValues().apply {
@@ -363,10 +340,7 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(
         return db.update(TABLE_TODO_ITEMS, values, "$COL_ITEM_ID = ?", arrayOf(id.toString()))
     }
 
-    /**
-     * 切换明细事项的完成状态
-     * 切换后自动检查清单是否应该自动完成或取消完成
-     */
+    //切换明细事项的完成状态
     fun toggleTodoItemStatus(id: Int, isCompleted: Boolean): Int {
         val db = writableDatabase
         val values = ContentValues().apply {
@@ -374,9 +348,8 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(
         }
         val result = db.update(TABLE_TODO_ITEMS, values, "$COL_ITEM_ID = ?", arrayOf(id.toString()))
 
-        // 切换后自动更新清单完成状态
+        // 明细全都完成自动将清单完成
         if (result > 0) {
-            // 获取该明细所属的清单 ID
             val cursor = db.query(
                 TABLE_TODO_ITEMS,
                 arrayOf(COL_TODO_ID_FK),
@@ -388,7 +361,7 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(
                 val todoId = cursor.getInt(cursor.getColumnIndexOrThrow(COL_TODO_ID_FK))
                 cursor.close()
 
-                // 检查该清单下所有明细的完成状态
+                // 检查该清单明细的完成状态
                 updateTodoStatusBasedOnItems(todoId)
             } else {
                 cursor.close()
@@ -398,11 +371,7 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(
         return result
     }
 
-    /**
-     * 根据清单下所有明细的完成状态，自动更新清单的完成状态
-     * 所有明细都完成 → 清单自动完成
-     * 有任何明细未完成 → 清单未完成
-     */
+    //更新清单完成昨天
     private fun updateTodoStatusBasedOnItems(todoId: Int) {
         val db = readableDatabase
 
@@ -430,14 +399,12 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(
         val completedCount = completedCursor.getInt(0)
         completedCursor.close()
 
-        // 所有明细都完成 → 清单自动完成
+        // 所有明细都完成，清单自动完成
         val allCompleted = totalCount == completedCount
         updateTodoCompletedStatus(todoId, allCompleted)
     }
 
-    /**
-     * 更新清单的完成状态
-     */
+    //更新清单的完成状态
     private fun updateTodoCompletedStatus(todoId: Int, isCompleted: Boolean) {
         val db = writableDatabase
         val values = ContentValues().apply {
@@ -447,14 +414,9 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(
         db.update(TABLE_TODOS, values, "$COL_TODO_ID = ?", arrayOf(todoId.toString()))
     }
 
-    /**
-     * 删除一条明细事项
-     * 删除后自动检查清单完成状态
-     */
+    //删除一条明细事项,并检查清单状态
     fun deleteTodoItem(id: Int): Int {
         val db = writableDatabase
-
-        // 先获取所属清单 ID
         val cursor = db.query(
             TABLE_TODO_ITEMS,
             arrayOf(COL_TODO_ID_FK),
@@ -468,10 +430,8 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(
         }
         cursor.close()
 
-        // 删除明细
         val result = db.delete(TABLE_TODO_ITEMS, "$COL_ITEM_ID = ?", arrayOf(id.toString()))
 
-        // 删除后更新清单状态
         if (result > 0 && todoId != null) {
             updateTodoStatusBasedOnItems(todoId)
         }
@@ -479,9 +439,7 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(
         return result
     }
 
-    /**
-     * 手动切换清单的完成状态
-     */
+    //手动切换清单的完成状态
     fun toggleTodoStatus(todoId: Int, isCompleted: Boolean): Int {
         val db = writableDatabase
         val values = ContentValues().apply {

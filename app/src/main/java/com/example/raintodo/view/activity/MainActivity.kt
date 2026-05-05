@@ -1,4 +1,5 @@
 package com.example.raintodo.view.activity
+
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Build
@@ -14,6 +15,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.viewpager2.widget.ViewPager2
 import com.example.raintodo.R
 import com.example.raintodo.repository.Resource.Status.*
+import com.example.raintodo.repository.UserDatabaseHelper
 import com.example.raintodo.view.adapter.ViewPager2Adapter
 import com.example.raintodo.view.dialog.LoginDialog
 import com.example.raintodo.viewmodel.DolistViewModel
@@ -33,7 +35,6 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // 1. 先设置沉浸式（在 setContentView 之前）
         window.setFlags(
             WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
             WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
@@ -41,55 +42,58 @@ class MainActivity : AppCompatActivity() {
 
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
-
+//小白条沉浸
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
 
-        // 2. 初始化 ViewModel
         sharedViewModel = ViewModelProvider(this)[SharedViewModel::class.java]
         viewModel = ViewModelProvider(this)[DolistViewModel::class.java]
 
-        // 3. 初始化视图
         init()
-
-        // 4. 观察登录结果
         observeLoginResult()
-
-        // 5. 观察注册结果
         observeRegisterResult()
-
-        // 6. 检查登录状态，未登录才弹出 Dialog
         checkLoginStatus()
 
         val fabAdd = findViewById<FloatingActionButton>(R.id.fabtn_add)
         fabAdd.setOnClickListener {
-            // 按钮被点击，通知 ViewModel
             sharedViewModel.onFabClicked()
         }
     }
 
-    /**
-     * 检查登录状态
-     */
     private fun checkLoginStatus() {
         if (!viewModel.isLoggedIn()) {
             showLoginDialog()
         } else {
-            // 已登录，加载数据
-           // viewModel.loadAllDolists()
+            loadUserDataAndInit()
         }
     }
 
-    /**
-     * 显示登录 Dialog
-     */
+    //加载用户数据
+
+    private fun loadUserDataAndInit() {
+        val username = viewModel.getCurrentUsername()
+        if (username != null) {
+            val dbHelper = UserDatabaseHelper(this)
+            val userId = dbHelper.getUserIdByUsername(username) ?: -1
+            dbHelper.close()
+
+            if (userId != -1) {
+                sharedViewModel.init(userId)
+            } else {
+                viewModel.logout()
+                showLoginDialog()
+            }
+        } else {
+            showLoginDialog()
+        }
+    }
+
     private fun showLoginDialog() {
         loginDialog = LoginDialog(this)
 
-        // 先设置回调，再显示
         loginDialog?.onLoginClickListener = { username, password ->
             viewModel.login(username, password)
         }
@@ -101,56 +105,43 @@ class MainActivity : AppCompatActivity() {
         loginDialog?.show()
     }
 
-    /**
-     * 观察登录结果
-     */
     private fun observeLoginResult() {
         viewModel.loginResult.observe(this) { resource ->
             when (resource.status) {
                 SUCCESS -> {
                     if (resource.data == true) {
                         Toast.makeText(this, "登录成功", Toast.LENGTH_SHORT).show()
-                        // 关闭 Dialog
                         loginDialog?.onLoginSuccess()
                         loginDialog = null
-                        // 刷新数据
-                      //  viewModel.loadAllDolists()
+                        loadUserDataAndInit()
                     }
                 }
+
                 ERROR -> {
                     Toast.makeText(this, resource.message ?: "登录失败", Toast.LENGTH_SHORT).show()
                 }
-                LOADING -> {
-                    Toast.makeText(this,"loading", Toast.LENGTH_SHORT).show()
-                }
-                null -> {
-                    Toast.makeText(this,"aoanao", Toast.LENGTH_SHORT).show()
+
+                else -> {
                 }
             }
         }
     }
 
-    /**
-     * 观察注册结果
-     */
     private fun observeRegisterResult() {
         viewModel.registerResult.observe(this) { resource ->
             when (resource.status) {
                 SUCCESS -> {
                     if (resource.data == true) {
                         Toast.makeText(this, "注册成功，请登录", Toast.LENGTH_SHORT).show()
-                        // 注册成功后清空输入，让用户登录
                         loginDialog?.onRegisterSuccess()
                     }
                 }
+
                 ERROR -> {
                     Toast.makeText(this, resource.message ?: "注册失败", Toast.LENGTH_SHORT).show()
                 }
-                LOADING -> {
-                    Toast.makeText(this, resource.message ?: "loading", Toast.LENGTH_SHORT).show()
-                }
-                null -> {
-                    Toast.makeText(this, resource.message ?: "null.", Toast.LENGTH_SHORT).show()
+
+                else -> {
                 }
             }
         }
@@ -163,22 +154,22 @@ class MainActivity : AppCompatActivity() {
         mbnv = findViewById<BottomNavigationView>(R.id.bnv_tab)
         mbnv.itemActiveIndicatorColor = ColorStateList.valueOf(Color.TRANSPARENT)
 
-        // 只保留一个监听器（推荐使用 setOnItemSelectedListener）
         mbnv.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.item_main -> {
                     mvp2.setCurrentItem(0, false)
                     true
                 }
+
                 R.id.item_my -> {
                     mvp2.setCurrentItem(1, false)
                     true
                 }
+
                 else -> false
             }
         }
 
-        // ViewPager2 页面切换同步导航栏
         mvp2.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
                 mbnv.selectedItemId = when (position) {
@@ -189,7 +180,6 @@ class MainActivity : AppCompatActivity() {
             }
         })
 
-        // 禁止滑动切换
         mvp2.isUserInputEnabled = false
     }
 }

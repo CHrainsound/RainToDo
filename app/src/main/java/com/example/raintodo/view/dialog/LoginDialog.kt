@@ -20,27 +20,20 @@ class LoginDialog(context: Context) : Dialog(context) {
     private lateinit var btnLogin: Button
     private lateinit var btnSignup: Button
 
-    // 登录回调：传入用户名和密码
+    // 登录回调
     var onLoginClickListener: ((String, String) -> Unit)? = null
 
-    // 注册回调：传入用户名和密码
+    // 注册回调
     var onRegisterClickListener: ((String, String) -> Unit)? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // 加载自定义布局
         setContentView(R.layout.login)
-
-        // 初始化控件
         initViews()
-
-        // 设置背景透明
+        // 设置dialog背景透明
         window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-
-        // 设置密码可见性切换
+        //密码可见性
         eyeicon()
-
-        // 设置按钮点击事件
         setupClickListeners()
         setCancelable(false)
         setCanceledOnTouchOutside(false)
@@ -67,50 +60,33 @@ class LoginDialog(context: Context) : Dialog(context) {
     }
 
     private fun setupClickListeners() {
-        // 登录按钮点击事件
         btnLogin.setOnClickListener {
             val username = etUsername.text.toString().trim()
             val password = etPassword.text.toString().trim()
 
-            // 触发登录回调
+            // 登录回调
             onLoginClickListener?.invoke(username, password)
-
-            // 注意：不要在这里 dismiss，等 ViewModel 回调结果再决定是否关闭
         }
-
-        // 注册按钮点击事件
         btnSignup.setOnClickListener {
             val username = etUsername.text.toString().trim()
             val password = etPassword.text.toString().trim()
 
-            // 触发注册回调
+            //注册回调
             onRegisterClickListener?.invoke(username, password)
 
-            // 注意：不要在这里 dismiss，等 ViewModel 回调结果再决定是否关闭
         }
     }
 
-    /**
-     * 登录成功后关闭 Dialog
-     */
     fun onLoginSuccess() {
         dismiss()
     }
 
-    /**
-     * 注册成功后提示
-     */
     fun onRegisterSuccess() {
-        // 清空输入
         etUsername.text?.clear()
         etPassword.text?.clear()
-        // 提示用户登录
         Toast.makeText(context, "注册成功，请登录", Toast.LENGTH_SHORT).show()
     }
 
-    /**
-     * 显示错误信息
-     */
     fun showError(message: String) {
         Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
     }

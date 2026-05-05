@@ -1,4 +1,3 @@
-// DolistViewModel.kt
 package com.example.raintodo.viewmodel
 
 import android.app.Application
@@ -10,30 +9,25 @@ import com.example.raintodo.repository.*
 class DolistViewModel(application: Application) : AndroidViewModel(application) {
     private val userRepository = UserRepository(application)
 
-    // 登录状态
     private val _loginResult = MutableLiveData<Resource<Boolean>>()
     val loginResult: LiveData<Resource<Boolean>> = _loginResult
 
-    // 注册状态
     private val _registerResult = MutableLiveData<Resource<Boolean>>()
     val registerResult: LiveData<Resource<Boolean>> = _registerResult
 
-    // 当前用户
     private val _currentUser = MutableLiveData<String?>()
     val currentUser: LiveData<String?> = _currentUser
 
+    private val _currentUserId = MutableLiveData<Int?>()
+    val currentUserId: LiveData<Int?> = _currentUserId
+
     init {
-        // 初始化时检查登录状态
         if (userRepository.isLoggedIn()) {
             _currentUser.value = userRepository.getCurrentUsername()
         }
     }
 
-    /**
-     * 用户登录
-     */
     fun login(username: String, password: String) {
-        // 1. 先校验输入
         if (username.isEmpty()) {
             _loginResult.value = Resource.error("请输入用户名", false)
             return
@@ -43,14 +37,18 @@ class DolistViewModel(application: Application) : AndroidViewModel(application) 
             return
         }
 
-
-        // 3. 在后台线程执行登录
         Thread {
             try {
                 val result = userRepository.login(username, password)
-
-                // 4. 回到主线程更新 UI
                 android.os.Handler(android.os.Looper.getMainLooper()).post {
+                    if (result.data == true) {
+                        _currentUser.value = username
+                        //获取并保存 userId
+                        val dbHelper = UserDatabaseHelper(getApplication())
+                        val userId = dbHelper.getUserIdByUsername(username)
+                        dbHelper.close()
+                        _currentUserId.value = userId
+                    }
                     _loginResult.value = result
                 }
             } catch (e: Exception) {
@@ -61,11 +59,7 @@ class DolistViewModel(application: Application) : AndroidViewModel(application) 
         }.start()
     }
 
-    /**
-     * 用户注册
-     */
     fun register(username: String, password: String) {
-        // 1. 先校验输入
         if (username.isEmpty()) {
             _registerResult.value = Resource.error("请输入用户名", false)
             return
@@ -82,14 +76,12 @@ class DolistViewModel(application: Application) : AndroidViewModel(application) 
             _registerResult.value = Resource.error("密码至少6个字符", false)
             return
         }
-        // 3. 在后台线程执行注册
+
         Thread {
             try {
                 val result = userRepository.register(username, password)
-
-                // 4. 回到主线程更新 UI
                 android.os.Handler(android.os.Looper.getMainLooper()).post {
-                    _registerResult.value = Resource.success(true)
+                    _registerResult.value = result
                 }
             } catch (e: Exception) {
                 android.os.Handler(android.os.Looper.getMainLooper()).post {
@@ -99,26 +91,23 @@ class DolistViewModel(application: Application) : AndroidViewModel(application) 
         }.start()
     }
 
-    /**
-     * 退出登录
-     */
     fun logout() {
         userRepository.logout()
         _currentUser.value = null
+        _currentUserId.value = null
         _loginResult.value = Resource.success(false)
     }
 
-    /**
-     * 检查是否已登录
-     */
     fun isLoggedIn(): Boolean {
         return userRepository.isLoggedIn()
     }
 
-    /**
-     * 获取当前用户名
-     */
     fun getCurrentUsername(): String? {
         return _currentUser.value
+    }
+
+    //获取当前用户ID
+    fun getCurrentUserId(): Int? {
+        return _currentUserId.value
     }
 }

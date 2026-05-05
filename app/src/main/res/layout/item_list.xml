@@ -1,55 +1,103 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.example.raintodo.view.widget.SwipeItemLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/swipe_layout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/transparent">
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="15dp"
+    android:layout_marginVertical="10dp">
 
-    <androidx.cardview.widget.CardView
-        android:layout_width="match_parent"
+    <LinearLayout
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="15dp"
-        android:layout_marginVertical="5dp"
-        android:backgroundTint="@color/backgroundMain"
-        android:padding="5dp"
-        app:cardCornerRadius="15dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        android:orientation="horizontal">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
+        <androidx.cardview.widget.CardView
+            android:id="@+id/card_main"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/backgroundMain"
+            android:padding="5dp"
+            app:cardCornerRadius="15dp"
+            app:cardElevation="2dp">
 
-            <LinearLayout
-                android:id="@+id/llt_list"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
+            <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:layout_height="wrap_content">
 
-                <ImageView
-                    android:id="@+id/iv_cmain_check"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:padding="5dp"
-                    android:src="@drawable/ic_main_uncheck" />
-
-                <EditText
-                    android:id="@+id/et_cmain_list"
+                <LinearLayout
+                    android:id="@+id/llt_list"
                     android:layout_width="match_parent"
-                    android:layout_height="40dp" />
-            </LinearLayout>
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent">
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rv_detail"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                app:layout_constraintStart_toStartOf="@+id/llt_list"
-                app:layout_constraintTop_toBottomOf="@id/llt_list"
-                android:layout_marginStart="30dp" />
-        </androidx.constraintlayout.widget.ConstraintLayout>
+                    <ImageView
+                        android:id="@+id/iv_cmain_check"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:padding="5dp"
+                        android:src="@drawable/ic_main_uncheck" />
 
+                    <EditText
+                        android:id="@+id/et_cmain_list"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1" />
+                </LinearLayout>
 
-    </androidx.cardview.widget.CardView>
-</androidx.constraintlayout.widget.ConstraintLayout>
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rv_detail"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="30dp"
+                    android:minHeight="48dp"
+                    app:layout_constraintStart_toStartOf="@+id/llt_list"
+                    app:layout_constraintTop_toBottomOf="@id/llt_list" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </androidx.cardview.widget.CardView>
+
+        <LinearLayout
+            android:id="@+id/btn_top"
+            android:layout_width="80dp"
+            android:layout_height="match_parent"
+            android:background="#FF9800"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_top" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="置顶"
+                android:textColor="#FFFFFF"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/btn_delete"
+            android:layout_width="80dp"
+            android:layout_height="match_parent"
+            android:background="#FF4444"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_delete" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="删除"
+                android:textColor="#FFFFFF"
+                android:textSize="12sp" />
+        </LinearLayout>
+    </LinearLayout>
+</com.example.raintodo.view.widget.SwipeItemLayout>
