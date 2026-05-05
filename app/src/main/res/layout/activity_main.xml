@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/backgroundMain"
+    android:orientation="vertical"
+    tools:context=".view.activity.MainActivity">
+
+
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/vp_main"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="@color/backgroundMain" />
+    <View
+        android:id="@+id/divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/bottomline" />
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+
+        <com.google.android.material.bottomnavigation.BottomNavigationView
+            android:id="@+id/bnv_tab"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_alignParentBottom="true"
+            android:background="@color/backgroundMain"
+            android:minHeight="-10dp"
+
+            app:elevation="0dp"
+            app:itemIconTint="@drawable/selector_tab_tint"
+            app:itemPaddingBottom="-100dp"
+            app:itemTextColor="@drawable/selector_tab_tint"
+            app:menu="@menu/menu"
+            />
+
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fabtn_add"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:backgroundTint="@color/transparent"
+            android:src="@drawable/ic_tab_plus"
+            app:elevation="0dp"
+            app:maxImageSize="45dp"
+            app:tint="@color/tabCheck" />
+    </FrameLayout>
+</LinearLayout>
