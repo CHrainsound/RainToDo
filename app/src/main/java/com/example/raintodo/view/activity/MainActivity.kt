@@ -31,7 +31,6 @@ class MainActivity : AppCompatActivity() {
     private var loginDialog: LoginDialog? = null
     private lateinit var sharedViewModel: SharedViewModel
 
-    @RequiresApi(Build.VERSION_CODES.R)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
