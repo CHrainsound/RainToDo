@@ -16,7 +16,7 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(
 ) {
     companion object {
         private const val DATABASE_NAME = "user.db"
-        private const val DATABASE_VERSION = 4  // 升级到版本4
+        private const val DATABASE_VERSION = 4
 
         // 用户表
         private const val TABLE_USERS = "users"
@@ -31,9 +31,9 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(
         private const val COL_TODO_ID = "id"
         private const val COL_USER_ID = "user_id"
         private const val COL_TITLE = "title"
-        private const val COL_TODO_IS_COMPLETED = "is_completed"  // 新增：清单完成状态
+        private const val COL_TODO_IS_COMPLETED = "is_completed"
         private const val COL_TODO_CREATED_AT = "created_at"
-        private const val COL_UPDATED_AT = "updated_at"
+
 
         // 明细
         private const val TABLE_TODO_ITEMS = "todo_items"
@@ -65,7 +65,6 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(
                 $COL_TITLE TEXT NOT NULL,
                 $COL_TODO_IS_COMPLETED INTEGER DEFAULT 0,
                 $COL_TODO_CREATED_AT TEXT DEFAULT (datetime('now','localtime')),
-                $COL_UPDATED_AT TEXT DEFAULT (datetime('now','localtime')),
                 FOREIGN KEY ($COL_USER_ID) REFERENCES $TABLE_USERS($COL_ID)
             )
         """.trimIndent()
@@ -92,7 +91,6 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(
                     $COL_USER_ID INTEGER NOT NULL,
                     $COL_TITLE TEXT NOT NULL,
                     $COL_TODO_CREATED_AT TEXT DEFAULT (datetime('now','localtime')),
-                    $COL_UPDATED_AT TEXT DEFAULT (datetime('now','localtime')),
                     FOREIGN KEY ($COL_USER_ID) REFERENCES $TABLE_USERS($COL_ID)
                 )
             """.trimIndent())
@@ -234,7 +232,6 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(
                 val title = getString(getColumnIndexOrThrow(COL_TITLE))
                 val isCompleted = getInt(getColumnIndexOrThrow(COL_TODO_IS_COMPLETED)) == 1
                 val createdAt = getString(getColumnIndexOrThrow(COL_TODO_CREATED_AT))
-                val updatedAt = getString(getColumnIndexOrThrow(COL_UPDATED_AT))
 
                 val items = getTodoItemsByTodoId(todoId)
 
@@ -246,7 +243,6 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(
                         isCompleted = isCompleted,
                         items = items,
                         createdAt = createdAt,
-                        updatedAt = updatedAt
                     )
                 )
             }
@@ -302,7 +298,6 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(
         val db = writableDatabase
         val values = ContentValues().apply {
             put(COL_TITLE, title)
-            put(COL_UPDATED_AT, getCurrentDateTime())
         }
         return db.update(TABLE_TODOS, values, "$COL_TODO_ID = ?", arrayOf(id.toString()))
     }
@@ -409,7 +404,6 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(
         val db = writableDatabase
         val values = ContentValues().apply {
             put(COL_TODO_IS_COMPLETED, if (isCompleted) 1 else 0)
-            put(COL_UPDATED_AT, getCurrentDateTime())
         }
         db.update(TABLE_TODOS, values, "$COL_TODO_ID = ?", arrayOf(todoId.toString()))
     }
@@ -444,7 +438,6 @@ class UserDatabaseHelper(context: Context) : SQLiteOpenHelper(
         val db = writableDatabase
         val values = ContentValues().apply {
             put(COL_TODO_IS_COMPLETED, if (isCompleted) 1 else 0)
-            put(COL_UPDATED_AT, getCurrentDateTime())
         }
         return db.update(TABLE_TODOS, values, "$COL_TODO_ID = ?", arrayOf(todoId.toString()))
     }
