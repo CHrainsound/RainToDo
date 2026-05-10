@@ -28,15 +28,6 @@ class DolistViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun login(username: String, password: String) {
-        if (username.isEmpty()) {
-            _loginResult.value = Resource.error("请输入用户名", false)
-            return
-        }
-        if (password.isEmpty()) {
-            _loginResult.value = Resource.error("请输入密码", false)
-            return
-        }
-
         Thread {
             try {
                 val result = userRepository.login(username, password)
@@ -60,23 +51,6 @@ class DolistViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun register(username: String, password: String) {
-        if (username.isEmpty()) {
-            _registerResult.value = Resource.error("请输入用户名", false)
-            return
-        }
-        if (username.length < 3) {
-            _registerResult.value = Resource.error("用户名至少3个字符", false)
-            return
-        }
-        if (password.isEmpty()) {
-            _registerResult.value = Resource.error("请输入密码", false)
-            return
-        }
-        if (password.length < 6) {
-            _registerResult.value = Resource.error("密码至少6个字符", false)
-            return
-        }
-
         Thread {
             try {
                 val result = userRepository.register(username, password)
