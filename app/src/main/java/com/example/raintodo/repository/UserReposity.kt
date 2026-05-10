@@ -12,7 +12,6 @@ class UserRepository(context: Context) {
     companion object {
         private const val KEY_IS_LOGGED_IN = "is_logged_in"
         private const val KEY_USERNAME = "current_username"
-        private const val KEY_TOKEN = "auth_token"
     }
 
     //注册新用户
